@@ -9,8 +9,15 @@ window.onload = () => {
     const password = document.getElementById("password").value;
 
     const user = { name, email, phone, password };
-    let response = await axios.post("http://localhost:3000/user/signup", user);
-    console.log("working");
-    console.log(response.data);
+    try {
+      let response = await axios.post(
+        "http://localhost:3000/user/signup",
+        user
+      );
+      console.log(response.data);
+      document.querySelector(".error").innerHTML = response.data.result;
+    } catch (err) {
+      console.log(err);
+    }
   });
 };
