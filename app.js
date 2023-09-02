@@ -10,7 +10,12 @@ const sequelize = require("./utils/database");
 const app = express();
 
 app.use(bodyParser.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST"],
+  })
+);
 
 // app.get("/user/signup", (req, res) => {
 //   res.status(200).json({ success: true });
