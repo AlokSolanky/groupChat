@@ -63,12 +63,12 @@ app.post("/user/signin", (req, res) => {
             });
           } else {
             res
-              .status(200)
+              .status(401)
               .json({ result: "password incorrect", success: false });
           }
         });
       } else {
-        res.status(200).json({ result: "Not registered, Sign Up first" });
+        res.status(404).json({ result: "Not registered, Sign Up first" });
       }
     })
     .catch((err) => {
