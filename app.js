@@ -4,6 +4,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const Sequelize = require("sequelize");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const User = require("./model/user");
 const sequelize = require("./utils/database");
@@ -17,9 +18,12 @@ app.use(
   })
 );
 
-// app.get("/user/signup", (req, res) => {
-//   res.status(200).json({ success: true });
-// });
+function generateWebToken(id) {
+  return jwt.sign(
+    { userId: id },
+    "ljalgmklgjal20359ijfljo209jlkjalkvjaijsaoijwg"
+  );
+}
 
 app.post("/user/signup", (req, res) => {
   try {
@@ -41,6 +45,35 @@ app.post("/user/signup", (req, res) => {
   } catch (err) {
     res.json({ result: err });
   }
+});
+
+app.post("/user/signin", (req, res) => {
+  User.findAll({ where: { email: req.body.email } })
+    .then(([result]) => {
+      if (result) {
+        bcrypt.compare(req.body.password, result.password, (err, response) => {
+          if (err) {
+            res.status(500).json({ result: "Error" });
+          }
+          if (response) {
+            res.status(200).json({
+              result: "login successfully",
+              success: true,
+              token: generateWebToken(result.id),
+            });
+          } else {
+            res
+              .status(200)
+              .json({ result: "password incorrect", success: false });
+          }
+        });
+      } else {
+        res.status(200).json({ result: "Not registered, Sign Up first" });
+      }
+    })
+    .catch((err) => {
+      res.json({ success: false, err });
+    });
 });
 
 sequelize
