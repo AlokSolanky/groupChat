@@ -63,17 +63,30 @@ app.post("/user/signin", (req, res) => {
             });
           } else {
             res
-              .status(401)
+              .status(200)
               .json({ result: "password incorrect", success: false });
           }
         });
       } else {
-        res.status(404).json({ result: "Not registered, Sign Up first" });
+        res.status(200).json({ result: "Not registered, Sign Up first" });
       }
     })
     .catch((err) => {
       res.json({ success: false, err });
     });
+});
+
+app.get("/user/getUser", async (req, res) => {
+  try {
+    let result = await User.findAll();
+    if (result) {
+      res.status(200).json({ result, success: true });
+    } else {
+      res.status(200).json({ result: null, success: false });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, err });
+  }
 });
 
 sequelize

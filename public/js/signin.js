@@ -13,11 +13,12 @@ window.onload = () => {
         "http://localhost:3000/user/signin",
         user
       );
+      console.log(response.data.result);
       document.querySelector(".error").innerHTML = response.data.result;
       if (response.data.success) {
         localStorage.setItem("token", response.data.token);
         location.replace(
-          "F:/Sharpener/nodejs/fullexpensetracker2/frontend/index.html"
+          "F:/Sharpener/nodejs/groupChat/public/html/index.html"
         );
       }
     } catch (err) {
