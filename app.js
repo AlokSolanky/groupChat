@@ -105,7 +105,13 @@ app.post("/chat/sendchat", Authent.Authenticate, async (req, res) => {
 
 app.get("/chat/getChat", async (req, res) => {
   try {
-    let result = await Chat.findAll();
+    const msgid = req.query.msgId;
+    console.log("ID IS ", id);
+    const result = await Chat.findAll({
+      where: {
+        id: { [sequelize.Op.gt]: msgid },
+      },
+    });
     if (result) {
       res.status(200).json({ result, success: true });
     } else {
