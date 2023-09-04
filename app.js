@@ -103,6 +103,19 @@ app.post("/chat/sendchat", Authent.Authenticate, async (req, res) => {
   }
 });
 
+app.get("/chat/getChat", async (req, res) => {
+  try {
+    let result = await Chat.findAll();
+    if (result) {
+      res.status(200).json({ result, success: true });
+    } else {
+      res.status(200).json({ result: null, success: false });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, err });
+  }
+});
+
 User.hasMany(Chat);
 Chat.belongsTo(User);
 

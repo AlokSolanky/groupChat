@@ -5,12 +5,26 @@ window.onload = async () => {
     let response = await axios.get("http://localhost:3000/user/getUser");
     const users = response.data.result;
 
-    console.log(users);
     for (let user of users) {
       let li = document.createElement("li");
 
       li.setAttribute("class", "users");
       let nameTextNode = document.createTextNode(`${user.name} joined`);
+      li.appendChild(nameTextNode);
+
+      msgWind.appendChild(li);
+    }
+    let chatResponse = await axios.get("http://localhost:3000/chat/getChat");
+    const chats = chatResponse.data.result;
+
+    for (let chat of chats) {
+      console.log(chat.createdAt.split(".")[0]);
+      const time = chat.createdAt.split(".")[0].split("T")[1];
+      let li = document.createElement("li");
+
+      li.setAttribute("class", "users");
+
+      let nameTextNode = document.createTextNode(`${chat.msg} ${time}`);
       li.appendChild(nameTextNode);
 
       msgWind.appendChild(li);
