@@ -15,5 +15,17 @@ window.onload = async () => {
 
       msgWind.appendChild(li);
     }
+
+    const frm = document.getElementById("form");
+    frm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const msgToSend = document.getElementById("msg").value;
+      const chat = { msgToSend };
+      let msgResponse = await axios.post(
+        "http://localhost:3000/chat/sendchat",
+        chat,
+        { headers: { Authorization: localStorage.getItem("token") } }
+      );
+    });
   } catch (error) {}
 };

@@ -1,4 +1,4 @@
-// require("dotenv").config()
+// require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -7,7 +7,9 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const User = require("./model/user");
+const Chat = require("./model/chat");
 const sequelize = require("./utils/database");
+const Authent = require("./utils/auth");
 const app = express();
 
 app.use(bodyParser.json());
@@ -88,6 +90,21 @@ app.get("/user/getUser", async (req, res) => {
     res.status(500).json({ success: false, err });
   }
 });
+
+app.post("/chat/sendchat", Authent.Authenticate, async (req, res) => {
+  try {
+    let result = await Chat.create({
+      msg: req.body.msgToSend,
+      userId: req.user.id,
+    });
+    res.status(200).json({ success: true, result });
+  } catch (err) {
+    res.status(500).json({ success: false, err });
+  }
+});
+
+User.hasMany(Chat);
+Chat.belongsTo(User);
 
 sequelize
   .sync()
