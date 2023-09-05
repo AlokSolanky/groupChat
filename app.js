@@ -5,9 +5,11 @@ const bodyParser = require("body-parser");
 const Sequelize = require("sequelize");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { Op } = require("@sequelize/core");
 
 const User = require("./model/user");
 const Chat = require("./model/chat");
+const Group = require("./model/group");
 const sequelize = require("./utils/database");
 const Authent = require("./utils/auth");
 const app = express();
@@ -105,11 +107,14 @@ app.post("/chat/sendchat", Authent.Authenticate, async (req, res) => {
 
 app.get("/chat/getChat", async (req, res) => {
   try {
-    const msgid = req.query.msgId;
-    console.log("ID IS ", id);
+    let msgid = req.query.msgId;
+    msgid = msgid - 0;
+    console.log("ID IS ", msgid);
     const result = await Chat.findAll({
       where: {
-        id: { [sequelize.Op.gt]: msgid },
+        id: {
+          [Op.gt]: msgid,
+        },
       },
     });
     if (result) {
@@ -122,8 +127,43 @@ app.get("/chat/getChat", async (req, res) => {
   }
 });
 
+app.post("/grp/createGrp", Authent.Authenticate, async (req, res) => {
+  if (!req.body.grp) res.status(404).json({ success: false });
+  else {
+    Group.create({ groupName: req.body.grp, userId: req.user.id })
+      .then((result) => {
+        result.addUser(req.user);
+        res
+          .status(200)
+          .json({ success: true, msg: "Group created Successfully", result });
+      })
+      .catch((err) => {
+        res.status(500).json(err);
+      });
+  }
+});
+
+app.get("/grp/getGroup", Authent.Authenticate, async (req, res) => {
+  Group.findAll({ where: { userId: req.user.id } })
+    .then((result) => {
+      res.status(200).json({ success: true, result });
+    })
+    .catch((err) => {
+      res.status(400).json({ success: false, err });
+    });
+});
+
 User.hasMany(Chat);
 Chat.belongsTo(User);
+
+User.hasOne(Group);
+Group.belongsTo(User);
+
+Group.hasMany(Chat);
+Chat.belongsTo(Group);
+
+User.belongsToMany(Group, { through: "User_Group" });
+Group.belongsToMany(User, { through: "User_Group" });
 
 sequelize
   .sync()

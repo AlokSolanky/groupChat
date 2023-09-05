@@ -28,7 +28,39 @@
         padding: 10px;
       }
       .container {
-        width: 80%;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: row;
+      }
+      .leftContainer{
+        position: relative;
+        width: 40%;
+        /* background-color: aqua; */
+        border: 2px solid rgb(220, 220, 220);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        z-index: 10;
+      }
+      .leftContainer > nav{
+        z-index: 1;
+        /* position: absolute; */
+        /* top: 10px; */
+        height: 10vh;
+        width: 95%;
+        display: flex; 
+        justify-content:space-between;
+        align-items:center;
+        flex-direction: row; 
+        border-radius: 15px;
+      }
+      .rightContainer
+      {
+        width: 60%;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -74,6 +106,12 @@
         border-radius: 5px;
         padding: 5px;
       }
+      #grp_list{
+        width: 90%;
+        height: 90vh;
+        margin-right: 10px;
+      }
+      
     </style>
   </head>
   <body>
@@ -93,6 +131,16 @@
       </div>
     </nav>
     <div class="container">
+      <div class="leftContainer">
+        <nav>
+          <h2 style="color: rgb(120, 120, 120)">Group</h2>
+          <button style="text-decoration: none;color: rgb(120, 120, 120);font-size: large;font-weight: bolder;" class="btn btn-outline-success group">New Group</button>
+        </nav>
+        <main id="grp_list">
+
+        </main>
+      </div>
+      <div class="rightContainer">
       <div class="userPanel"></div>
       <div class="message_window"></div>
       <div class="typing_panel">
@@ -110,6 +158,7 @@
           <button type="submit" class="send_btn">Send</button>
         </div>
         
+      </div>
       </div>
     </div>
   </body>
