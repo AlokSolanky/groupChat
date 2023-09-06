@@ -24,15 +24,46 @@ window.onload = async () => {
       });
     }
 
-    let response = await axios.get("http://localhost:3000/user/getUser");
+    let response = await axios.get(
+      `http://localhost:3000/user/getUser?grpId=${localStorage.getItem(
+        "grpId"
+      )}`
+    );
     const users = response.data.result;
-
+    const adminId = response.data.admin;
     for (let user of users) {
+      let position;
+      let del = document.createElement("button");
+      del.setAttribute("class", "delete");
+      del.setAttribute("title", "Delete this user");
       let li = document.createElement("li");
 
+      let createAdmin = document.createElement("button");
+      createAdmin.setAttribute("class", "delete");
+      createAdmin.setAttribute("title", "Make him admin");
+
       li.setAttribute("class", "users");
-      let nameTextNode = document.createTextNode(`${user.name} joined`);
-      li.appendChild(nameTextNode);
+
+      if (user.id === adminId) {
+        position = "Admin";
+        let nameTextNode = document.createTextNode(`${user.name}: ${position}`);
+        li.appendChild(nameTextNode);
+      } else {
+        position = "Member";
+        del.innerHTML = "X";
+        let nameTextNode = document.createTextNode(`${user.name}: ${position}`);
+        li.appendChild(nameTextNode);
+        li.appendChild(del);
+        del.addEventListener("click", async (e) => {
+          deleteUser(user.id);
+        });
+        createAdmin.innerHTML = "Make Admin";
+
+        createAdmin.addEventListener("click", async (e) => {
+          makeAdmin(user.id);
+        });
+        li.appendChild(createAdmin);
+      }
 
       userWind.appendChild(li);
     }
@@ -69,16 +100,19 @@ window.onload = async () => {
       )}`
     );
     chats = chatResponse.data.result;
-
+    console.log(chatResponse.data);
     if (chats.length <= 0) alert("no chats found");
     else {
       for (let chat of chats) {
+        console.log(chat);
         const time = chat.createdAt.split(".")[0].split("T")[1];
         let li = document.createElement("li");
 
         li.setAttribute("class", "users");
 
-        let nameTextNode = document.createTextNode(`${chat.msg} ${time}`);
+        let nameTextNode = document.createTextNode(
+          `${chat.user.name}: ${chat.msg}`
+        );
         li.appendChild(nameTextNode);
 
         msgWind.appendChild(li);
@@ -148,3 +182,32 @@ join_btn.addEventListener("click", async (e) => {
 });
 
 function loadGrpContent(grp_id) {}
+async function deleteUser(userId) {
+  try {
+    let response = await axios.delete(
+      `http://localhost:3000/grp/deleteUser?userId=${userId}&grpId=${localStorage.getItem(
+        "grpId"
+      )}`,
+      { headers: { Authorization: localStorage.getItem("token") } }
+    );
+    console.log(response);
+    alert(response.data.message);
+  } catch (error) {
+    alert("Could not delete");
+  }
+}
+
+async function makeAdmin(userId) {
+  try {
+    let response = await axios.put(
+      `http://localhost:3000/grp/deleteUser?userId=${userId}&grpId=${localStorage.getItem(
+        "grpId"
+      )}`,
+      { headers: { Authorization: localStorage.getItem("token") } }
+    );
+    console.log(response);
+    alert(response.data.message);
+  } catch (error) {
+    alert("Could not delete");
+  }
+}

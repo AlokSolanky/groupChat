@@ -18,7 +18,7 @@ app.use(bodyParser.json());
 app.use(
   cors({
     origin: "*",
-    methods: ["GET", "POST"],
+    // methods: ["GET", "POST"],
   })
 );
 
@@ -82,9 +82,11 @@ app.post("/user/signin", (req, res) => {
 
 app.get("/user/getUser", async (req, res) => {
   try {
-    let result = await User.findAll();
+    let grpId = req.query.grpId - 0;
+    const group = await Group.findByPk(grpId);
+    const result = await group.getUsers();
     if (result) {
-      res.status(200).json({ result, success: true });
+      res.status(200).json({ result, success: true, admin: group.userId });
     } else {
       res.status(200).json({ result: null, success: false });
     }
@@ -112,7 +114,6 @@ app.get("/chat/getChat", async (req, res) => {
     let grpid = req.query.grpId;
     msgid = msgid - 0;
     grpid = grpid - 0;
-    console.log("group id ", grpid);
     const result = await Chat.findAll({
       where: {
         id: {
@@ -120,6 +121,7 @@ app.get("/chat/getChat", async (req, res) => {
         },
         groupId: grpid,
       },
+      include: User,
     });
     if (result) {
       res.status(200).json({ result, success: true });
@@ -157,13 +159,11 @@ app.get("/grp/getGroup", Authent.Authenticate, async (req, res) => {
     }
     const groups = await user.getGroups();
     if (!groups) {
-      res
-        .status(400)
-        .json({
-          success: false,
-          result: null,
-          msg: "no groups created by this user",
-        });
+      res.status(400).json({
+        success: false,
+        result: null,
+        msg: "no groups created by this user",
+      });
     }
     res
       .status(200)
@@ -195,6 +195,33 @@ app.post("/grp/joinGroup", Authent.Authenticate, async (req, res) => {
       res.status(500).json(err);
     }
   }
+});
+
+app.delete("/grp/deleteUser", Authent.Authenticate, async (req, res) => {
+  try {
+    let userId = req.query.userId - 0;
+    let grpId = req.query.grpId - 0;
+
+    // console.log(userId, " and ", grpId);
+    if (!(userId === req.user.id)) {
+      const user = await User.findByPk(userId);
+      const group = await Group.findByPk(grpId);
+      let result = await user.removeGroup(group);
+      if (result) {
+        res.status(200).json({
+          success: true,
+          result,
+          message: "User deleted successfully",
+        });
+      }
+    } else {
+      res.status(200).json({
+        success: false,
+        result: null,
+        message: "You are not an admin of this group",
+      });
+    }
+  } catch (error) {}
 });
 
 User.hasMany(Chat);
