@@ -98,6 +98,7 @@ app.post("/chat/sendchat", Authent.Authenticate, async (req, res) => {
     let result = await Chat.create({
       msg: req.body.msgToSend,
       userId: req.user.id,
+      groupId: req.body.grpId,
     });
     res.status(200).json({ success: true, result });
   } catch (err) {
@@ -108,13 +109,16 @@ app.post("/chat/sendchat", Authent.Authenticate, async (req, res) => {
 app.get("/chat/getChat", async (req, res) => {
   try {
     let msgid = req.query.msgId;
+    let grpid = req.query.grpId;
     msgid = msgid - 0;
-    console.log("ID IS ", msgid);
+    grpid = grpid - 0;
+    console.log("group id ", grpid);
     const result = await Chat.findAll({
       where: {
         id: {
           [Op.gt]: msgid,
         },
+        groupId: grpid,
       },
     });
     if (result) {
@@ -151,6 +155,51 @@ app.get("/grp/getGroup", Authent.Authenticate, async (req, res) => {
     .catch((err) => {
       res.status(400).json({ success: false, err });
     });
+  //   const userId = req.user.id;
+
+  //   try {
+  //     console.log("reached1");
+  //     const user = await User.findByPk(userId, {
+  //       include: [
+  //         {
+  //           model: Group,
+  //           through: "User_Group",
+  //         },
+  //       ],
+  //     });
+  //     console.log("reached2");
+  //     if (user) {
+  //       const groups = user.Groups;
+  //       res.json({ userId, groups });
+  //     } else {
+  //       res.status(404).json({ error: "User not found" });
+  //     }
+  //   } catch (error) {
+  //     console.error("Error:", error.message);
+  //     res.status(500).json({ error: "Internal server error" });
+  //   }
+});
+
+app.post("/grp/joinGroup", Authent.Authenticate, async (req, res) => {
+  if (!req.body.grpId) res.status(404).json({ success: false });
+  else {
+    console.log("GRP ID ", req.body.grpId);
+    try {
+      let result = await Group.findByPk(req.body.grpId);
+      if (result) {
+        result.addUser(req.user);
+        res
+          .status(200)
+          .json({ success: true, msg: "Joined Successfully", result });
+      } else {
+        res
+          .status(400)
+          .json({ success: false, msg: "no such group found", result });
+      }
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  }
 });
 
 User.hasMany(Chat);
