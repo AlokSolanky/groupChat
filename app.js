@@ -148,36 +148,31 @@ app.post("/grp/createGrp", Authent.Authenticate, async (req, res) => {
 });
 
 app.get("/grp/getGroup", Authent.Authenticate, async (req, res) => {
-  Group.findAll({ where: { userId: req.user.id } })
-    .then((result) => {
-      res.status(200).json({ success: true, result });
-    })
-    .catch((err) => {
-      res.status(400).json({ success: false, err });
-    });
-  //   const userId = req.user.id;
-
-  //   try {
-  //     console.log("reached1");
-  //     const user = await User.findByPk(userId, {
-  //       include: [
-  //         {
-  //           model: Group,
-  //           through: "User_Group",
-  //         },
-  //       ],
-  //     });
-  //     console.log("reached2");
-  //     if (user) {
-  //       const groups = user.Groups;
-  //       res.json({ userId, groups });
-  //     } else {
-  //       res.status(404).json({ error: "User not found" });
-  //     }
-  //   } catch (error) {
-  //     console.error("Error:", error.message);
-  //     res.status(500).json({ error: "Internal server error" });
-  //   }
+  try {
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      res
+        .status(400)
+        .json({ success: false, result: null, msg: "no user logged in" });
+    }
+    const groups = await user.getGroups();
+    if (!groups) {
+      res
+        .status(400)
+        .json({
+          success: false,
+          result: null,
+          msg: "no groups created by this user",
+        });
+    }
+    res
+      .status(200)
+      .json({ success: true, result: groups, msg: "Groups found" });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ success: false, result: err, msg: "internal server error" });
+  }
 });
 
 app.post("/grp/joinGroup", Authent.Authenticate, async (req, res) => {
