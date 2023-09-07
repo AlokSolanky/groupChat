@@ -17,6 +17,7 @@ window.onload = () => {
       document.querySelector(".error").innerHTML = response.data.result;
       if (response.data.success) {
         localStorage.setItem("token", response.data.token);
+        localStorage.removeItem("grpId");
         location.replace(
           "F:/Sharpener/nodejs/groupChat/public/html/index.html"
         );

@@ -1,13 +1,25 @@
 window.onload = async () => {
+  const userName = document.getElementById("userName");
+  try {
+    let nameResponse = await axios.get(
+      "http://localhost:3000/user/getLoginUser",
+      { headers: { Authorization: localStorage.getItem("token") } }
+    );
+    userName.innerHTML = nameResponse.data.name;
+  } catch (error) {
+    console.log(error);
+  }
+
   const msgWind = document.querySelector(".message_window");
   const userWind = document.querySelector(".userPanel");
-  // setInterval(async () => {
-  // userWind.innerHTML = "";
-  // msgWind.innerHTML = "";
   try {
     let getGroups = await axios.get("http://localhost:3000/grp/getGroup", {
       headers: { Authorization: localStorage.getItem("token") },
     });
+
+    if (getGroups.data.result.length === 0) {
+      localStorage.removeItem("grpId");
+    }
     const grpContainer = document.getElementById("grp_list");
     for (let grp of getGroups.data.result) {
       let li = document.createElement("button");
@@ -20,15 +32,21 @@ window.onload = async () => {
       grpContainer.appendChild(li);
       li.addEventListener("click", async (e) => {
         localStorage.setItem("grpId", grp.id);
-        loadGrpContent(grp.id);
+        // loadGrpContent(grp.id);
+        location.reload();
       });
     }
 
-    let response = await axios.get(
-      `http://localhost:3000/user/getUser?grpId=${localStorage.getItem(
-        "grpId"
-      )}`
-    );
+    let response;
+    if (localStorage.getItem("grpId") == null) {
+      alert("No groups select, choose one");
+    } else {
+      response = await axios.get(
+        `http://localhost:3000/user/getUser?grpId=${localStorage.getItem(
+          "grpId"
+        )}`
+      );
+    }
     const users = response.data.result;
     const adminId = response.data.admin;
     for (let user of users) {
@@ -42,12 +60,21 @@ window.onload = async () => {
       createAdmin.setAttribute("class", "delete");
       createAdmin.setAttribute("title", "Make him admin");
 
+      let addPlayer = document.createElement("button");
+      addPlayer.setAttribute("class", "delete");
+      addPlayer.setAttribute("title", "Add participant to the group");
+
       li.setAttribute("class", "users");
 
-      if (user.id === adminId) {
+      if (user.groupUser.isAdmin) {
         position = "Admin";
         let nameTextNode = document.createTextNode(`${user.name}: ${position}`);
         li.appendChild(nameTextNode);
+        addPlayer.innerHTML = "+";
+        li.appendChild(addPlayer);
+        addPlayer.addEventListener("click", async (e) => {
+          addParticipant(user.id);
+        });
       } else {
         position = "Member";
         del.innerHTML = "X";
@@ -55,6 +82,7 @@ window.onload = async () => {
         li.appendChild(nameTextNode);
         li.appendChild(del);
         del.addEventListener("click", async (e) => {
+          // localStorage.removeItem("grpId");
           deleteUser(user.id);
         });
         createAdmin.innerHTML = "Make Admin";
@@ -100,11 +128,9 @@ window.onload = async () => {
       )}`
     );
     chats = chatResponse.data.result;
-    console.log(chatResponse.data);
     if (chats.length <= 0) alert("no chats found");
     else {
       for (let chat of chats) {
-        console.log(chat);
         const time = chat.createdAt.split(".")[0].split("T")[1];
         let li = document.createElement("li");
 
@@ -121,7 +147,6 @@ window.onload = async () => {
   } catch (error) {
     console.log(error);
   }
-  // }, 1000);
 };
 const frm = document.getElementById("form");
 frm.addEventListener("submit", async (e) => {
@@ -134,6 +159,19 @@ frm.addEventListener("submit", async (e) => {
     chat,
     { headers: { Authorization: localStorage.getItem("token") } }
   );
+  if (msgResponse.data.success) {
+    const msgWind = document.querySelector(".message_window");
+    let li = document.createElement("li");
+
+    li.setAttribute("class", "users");
+
+    let nameTextNode = document.createTextNode(
+      `${msgResponse.data.userName}: ${msgResponse.data.result.msg}`
+    );
+    li.appendChild(nameTextNode);
+
+    msgWind.appendChild(li);
+  }
 });
 
 const grp_btn = document.querySelector(".group");
@@ -178,10 +216,11 @@ join_btn.addEventListener("click", async (e) => {
     { grpId },
     { headers: { Authorization: localStorage.getItem("token") } }
   );
-  console.log(joinGrpResponse.data.success);
 });
 
 function loadGrpContent(grp_id) {}
+
+//function to delete user
 async function deleteUser(userId) {
   try {
     let response = await axios.delete(
@@ -190,24 +229,44 @@ async function deleteUser(userId) {
       )}`,
       { headers: { Authorization: localStorage.getItem("token") } }
     );
-    console.log(response);
     alert(response.data.message);
+    if (response.data.success) {
+      location.reload();
+    }
   } catch (error) {
     alert("Could not delete");
   }
 }
 
+//function to make an user the admin of the group
 async function makeAdmin(userId) {
   try {
-    let response = await axios.put(
-      `http://localhost:3000/grp/deleteUser?userId=${userId}&grpId=${localStorage.getItem(
+    let adminResponse = await axios.put(
+      `http://localhost:3000/grp/makeAdmin?grpId=${localStorage.getItem(
         "grpId"
-      )}`,
+      )}&userId=${userId}`,
+      null,
       { headers: { Authorization: localStorage.getItem("token") } }
     );
-    console.log(response);
-    alert(response.data.message);
-  } catch (error) {
-    alert("Could not delete");
+    alert(adminResponse.data.message);
+    if (adminResponse.data.success) location.reload();
+  } catch (err) {
+    console.log(err.message);
+  }
+}
+
+//function to add participants in a group
+async function addParticipant(uid) {
+  let userId = prompt("Enter the id of user");
+  userId = userId - 0;
+  grpId = localStorage.getItem("grpId") - 0;
+  let addResponse = await axios.post(
+    `http://localhost:3000/grp/joinGroup/${grpId}`,
+    { userId },
+    { headers: { Authorization: localStorage.getItem("token") } }
+  );
+  if (addResponse.data.success) {
+    alert(addResponse.data.msg);
+    location.reload();
   }
 }
