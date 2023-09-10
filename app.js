@@ -1,4 +1,6 @@
 // require("dotenv").config();
+const http = require("http");
+const { Server } = require("socket.io");
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -17,19 +19,28 @@ const chatRoutes = require("./routes/chat");
 const grpRoutes = require("./routes/group");
 const app = express();
 
-app.use(bodyParser.json());
-app.use(
-  cors({
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
     origin: "*",
-    // methods: ["GET", "POST"],
-  })
-);
+  },
+});
+
+app.use(express.static("public"));
+app.use(bodyParser.json());
+app.use(cors());
 
 app.use("/user", userRoutes);
 
 app.use("/chat", chatRoutes);
 
 app.use("/grp", grpRoutes);
+
+io.on("connection", (socket) => {
+  socket.on("sendData", (obj) => {
+    socket.broadcast.emit("recieve-all", obj);
+  });
+});
 
 User.hasMany(Chat);
 Chat.belongsTo(User);
@@ -45,7 +56,7 @@ sequelize
   .then(() => {
     console.log("Database Connected...");
     const port = process.env.PORT || 3000;
-    app.listen(port, () => {
+    server.listen(port, () => {
       console.log(`Server start on port 3000`);
     });
   })

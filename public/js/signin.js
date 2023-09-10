@@ -19,7 +19,8 @@ window.onload = () => {
         localStorage.setItem("token", response.data.token);
         localStorage.removeItem("grpId");
         location.replace(
-          "F:/Sharpener/nodejs/groupChat/public/html/index.html"
+          // "F:/Sharpener/nodejs/groupChat/public/html/index.html"
+          "../html/index.html"
         );
       }
     } catch (err) {

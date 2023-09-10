@@ -1,3 +1,6 @@
+// // import { io } from "socket.io-client";
+// import { io } from "socket.io-client";
+const socket = io("http://localhost:3000");
 window.onload = async () => {
   const userName = document.getElementById("userName");
   try {
@@ -127,7 +130,8 @@ window.onload = async () => {
         "grpId"
       )}`
     );
-    chats = chatResponse.data.result;
+    // console.log(chatResponse.data.result);
+    let chats = chatResponse.data.result;
     if (chats.length <= 0) alert("no chats found");
     else {
       for (let chat of chats) {
@@ -148,12 +152,40 @@ window.onload = async () => {
     console.log(error);
   }
 };
+
+// socket.on("connect", () => {
+//   console.log(socket.id);
+//   alert("connected with id ", socket.id);
+// });
+
+socket.on("recieve-all", (obj) => {
+  if (obj.success) {
+    const msgWind = document.querySelector(".message_window");
+    let li = document.createElement("li");
+
+    li.setAttribute("class", "users");
+
+    let nameTextNode = document.createTextNode(
+      `${obj.userName}: ${obj.result.msg}`
+    );
+    li.appendChild(nameTextNode);
+
+    msgWind.appendChild(li);
+  }
+});
+
 const frm = document.getElementById("form");
 frm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const msgToSend = document.getElementById("msg").value;
+  const fileToSend = document.getElementById("files").files[0];
+  console.log(typeof fileToSend);
   document.getElementById("msg").value = "";
-  const chat = { msgToSend, grpId: localStorage.getItem("grpId") };
+  const chat = {
+    msgToSend,
+    grpId: localStorage.getItem("grpId"),
+    fileToSend,
+  };
   let msgResponse = await axios.post(
     "http://localhost:3000/chat/sendchat",
     chat,
@@ -172,6 +204,8 @@ frm.addEventListener("submit", async (e) => {
 
     msgWind.appendChild(li);
   }
+
+  socket.emit("sendData", msgResponse.data);
 });
 
 const grp_btn = document.querySelector(".group");
@@ -216,6 +250,8 @@ join_btn.addEventListener("click", async (e) => {
     { grpId },
     { headers: { Authorization: localStorage.getItem("token") } }
   );
+  alert(joinGrpResponse.data.msg);
+  location.reload();
 });
 
 function loadGrpContent(grp_id) {}

@@ -95,9 +95,36 @@
       #form
       {
         width: 80%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+      }
+      #files {
+        opacity: 0;
+   position: absolute;
+   z-index: -1;
+      }
+      #fileDiv
+      {
+        /* height: 40px;
+        width: 10%;
+        border: 2px solid rgba(3, 30, 9, 0.79);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: aqua;
+        font-size: medium;
+        border-radius: 5px; */
+        background-color: white;
+        border: 2px solid rgba(3, 30, 9, 0.79);
+        border-radius: 5px;
+        padding: 5px;
+        margin-bottom: 15px;
+        margin-right: 10px;
       }
       .msg_btn
       {
+        width: 90%;
         display: flex;
         justify-content: space-evenly;
         flex-direction: row;
@@ -157,6 +184,10 @@
       <div class="typing_panel">
         <!-- <div>Select</div> -->
         <form id="form">
+          <div id="fileDiv">
+          <label for="files" style="cursor: pointer;">Browse</label>
+          <input type="file" id="files">
+          </div>
         <div class="input-group-md mb-3 msg_btn">
           <input
             type="text"
@@ -178,6 +209,7 @@
     integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
     crossorigin="anonymous"
   ></script>
+  <script defer src="http://localhost:3000/socket.io/socket.io.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
-  <script src="../js/index.js"></script>
+  <script type="module" src="../js/index.js"></script>
 </html>
