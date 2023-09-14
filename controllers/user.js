@@ -27,7 +27,11 @@ module.exports.getUser = async (req, res) => {
 };
 
 module.exports.getLoginUser = async (req, res) => {
-  res.status(200).json({ name: req.user.name });
+  if (req.user) {
+    res.status(200).json({ name: req.user.name });
+  } else {
+    res.status(400).json({ name: "Login First" });
+  }
 };
 
 module.exports.signinUser = (req, res) => {

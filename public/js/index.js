@@ -1,6 +1,7 @@
 // // import { io } from "socket.io-client";
 // import { io } from "socket.io-client";
 const socket = io("http://localhost:3000");
+let loginUser;
 window.onload = async () => {
   const userName = document.getElementById("userName");
   try {
@@ -8,6 +9,7 @@ window.onload = async () => {
       "http://localhost:3000/user/getLoginUser",
       { headers: { Authorization: localStorage.getItem("token") } }
     );
+    loginUser = nameResponse.data.name;
     userName.innerHTML = nameResponse.data.name;
   } catch (error) {
     console.log(error);
@@ -138,12 +140,16 @@ window.onload = async () => {
         const time = chat.createdAt.split(".")[0].split("T")[1];
         let li = document.createElement("li");
 
-        li.setAttribute("class", "users");
+        li.setAttribute("class", "chats");
 
         let nameTextNode = document.createTextNode(
           `${chat.user.name}: ${chat.msg}`
         );
         li.appendChild(nameTextNode);
+
+        if (chat.user.name === loginUser) {
+          li.classList.add("loginUser");
+        }
 
         msgWind.appendChild(li);
       }
@@ -163,7 +169,7 @@ socket.on("recieve-all", (obj) => {
     const msgWind = document.querySelector(".message_window");
     let li = document.createElement("li");
 
-    li.setAttribute("class", "users");
+    li.setAttribute("class", "chats");
 
     let nameTextNode = document.createTextNode(
       `${obj.userName}: ${obj.result.msg}`
@@ -176,30 +182,54 @@ socket.on("recieve-all", (obj) => {
 
 const frm = document.getElementById("form");
 frm.addEventListener("submit", async (e) => {
+  let msgResponse;
   e.preventDefault();
   const msgToSend = document.getElementById("msg").value;
   const fileToSend = document.getElementById("files").files[0];
-  console.log(typeof fileToSend);
+  let formData = new FormData();
+
+  console.log(formData);
   document.getElementById("msg").value = "";
-  const chat = {
-    msgToSend,
-    grpId: localStorage.getItem("grpId"),
-    fileToSend,
-  };
-  let msgResponse = await axios.post(
-    "http://localhost:3000/chat/sendchat",
-    chat,
-    { headers: { Authorization: localStorage.getItem("token") } }
-  );
+  if (fileToSend) {
+    const chat = {
+      msgToSend,
+      grpId: localStorage.getItem("grpId"),
+      formData,
+    };
+    msgResponse = await axios.post(
+      "http://localhost:3000/chat/sendchat",
+      chat,
+      {
+        headers: { Authorization: localStorage.getItem("token") },
+        "Content-Type": "multipart/form-data",
+      }
+    );
+  } else {
+    const chat = {
+      msgToSend,
+      grpId: localStorage.getItem("grpId"),
+      formData,
+    };
+    msgResponse = await axios.post(
+      "http://localhost:3000/chat/sendchat",
+      chat,
+      {
+        headers: { Authorization: localStorage.getItem("token") },
+      }
+    );
+  }
   if (msgResponse.data.success) {
     const msgWind = document.querySelector(".message_window");
     let li = document.createElement("li");
 
-    li.setAttribute("class", "users");
+    li.setAttribute("class", "chats");
 
     let nameTextNode = document.createTextNode(
       `${msgResponse.data.userName}: ${msgResponse.data.result.msg}`
     );
+    if (msgResponse.data.userName === loginUser) {
+      li.classList.add("loginUser");
+    }
     li.appendChild(nameTextNode);
 
     msgWind.appendChild(li);
@@ -234,7 +264,11 @@ grp_btn.addEventListener("click", async (e) => {
       li.setAttribute("id", grpResponse.data.result.id);
       grpContainer.appendChild(li);
 
-      li.addEventListener("click", async (e) => {});
+      li.addEventListener("click", async (e) => {
+        localStorage.setItem("grpId", grpResponse.data.result.id);
+        // console.log(grpResponse.data.result.id);
+        location.reload();
+      });
     }
   } catch (error) {
     console.log(error);
@@ -295,7 +329,7 @@ async function makeAdmin(userId) {
 async function addParticipant(uid) {
   let userId = prompt("Enter the id of user");
   userId = userId - 0;
-  grpId = localStorage.getItem("grpId") - 0;
+  let grpId = localStorage.getItem("grpId") - 0;
   let addResponse = await axios.post(
     `http://localhost:3000/grp/joinGroup/${grpId}`,
     { userId },

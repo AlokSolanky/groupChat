@@ -7,11 +7,13 @@ const bodyParser = require("body-parser");
 const Sequelize = require("sequelize");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+var CronJob = require("cron").CronJob;
 
 const User = require("./model/user");
 const Chat = require("./model/chat");
 const Group = require("./model/group");
 const GroupUser = require("./model/usergroup");
+const ArchivedChat = require("./model/archived");
 const sequelize = require("./utils/database");
 const Authent = require("./utils/auth");
 const userRoutes = require("./routes/user");
@@ -41,6 +43,24 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("recieve-all", obj);
   });
 });
+
+const job = new CronJob("00 00 00 * * *", async function () {
+  try {
+    Chat.findAll().then(async (result) => {
+      if (result) {
+        await ArchivedChat.bulkCreate(result.map((item) => item.toJSON()));
+        await Chat.destroy({
+          where: {},
+        });
+      } else {
+        console.log("No More rows");
+      }
+    });
+  } catch (error) {
+    console.log("err ", error);
+  }
+});
+job.start();
 
 User.hasMany(Chat);
 Chat.belongsTo(User);

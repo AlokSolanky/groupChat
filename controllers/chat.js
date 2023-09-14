@@ -27,7 +27,7 @@ module.exports.getChat = async (req, res) => {
 };
 
 module.exports.sendChat = async (req, res) => {
-  console.log("THIS IS FILE ", req.body.fileToSend);
+  console.log("THIS IS FILE ", req.file);
   try {
     let result = await Chat.create({
       msg: req.body.msgToSend,
